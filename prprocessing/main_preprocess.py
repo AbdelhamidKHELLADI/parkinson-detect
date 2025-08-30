@@ -55,7 +55,7 @@ def get_features(segmnt,f0min=75, f0max=600, unit="Hertz"):
     pitch = call(segmnt, "To Pitch", 0.0, f0min, f0max)
     pitch_values = pitch.selected_array['frequency']
     putch_values= pitch_values[pitch_values > 0]
-    perceived_pitch = np.median(putch_values) if len(putch_values) > 0 else [0]
+    perceived_pitch = np.median(putch_values) if len(putch_values) > 0 else 0
     meanF0 = call(pitch, "Get mean", 0, 0,unit)
     harmonicity = call(segmnt, "To Harmonicity (cc)", 0.01, f0min, 0.1, 1.0)
     hnr = call(harmonicity, "Get mean", 0, 0)
@@ -166,6 +166,7 @@ def preprocess_dataset(data_dir, output_csv, segment_duration=1):
 
 
 def main():
+    save_paths=[]
     classes = {
         os.path.join('/media', 'data', 'italian_parkinson', '22 Elderly Healthy Control'): 'Healthy',
         os.path.join('/media', 'data', 'italian_parkinson', "28 People with Parkinson's disease", '1-5'): 'Mild',
@@ -176,6 +177,13 @@ def main():
     for data_dir, label in classes.items():
         output_csv = f'/media/data/features/{label}.csv'
         preprocess_dataset(data_dir, output_csv, segment_duration=1)
+        save_paths.append(output_csv)
+    all_data = pd.DataFrame()
+    for path in save_paths:
+        df = pd.read_csv(path)
+        all_data = pd.concat([all_data, df], ignore_index=True)
+    all_data.to_csv('/media/data/features/extracted_features.csv', index=False)
+    
 
 if __name__ == "__main__":
     main()
